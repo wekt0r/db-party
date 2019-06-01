@@ -1,0 +1,6 @@
+CREATE USER app WITH ENCRYPTED PASSWORD 'qwerty';
+GRANT CONNECT ON DATABASE student TO app;
+
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO app;
+GRANT EXECUTE ON ALL TABLES IN SCHEMA public TO app;
+GRANT INSERT ON member, member_votes_for_action, action TO app;
