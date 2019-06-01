@@ -8,11 +8,16 @@ from api import API
 error_function = lambda *_, **__: ("ERROR", None)
 
 def init_database(cursor):
-    "stwurzbazunie i stwurzapp"
-    pass
+    with open('initialize_tables.sql', 'r') as f:
+        cursor.execute(f.read())
+    #with open('initialize_app.sql', 'r') as f:
+    #    cursor.execute(f.read())
 
-def get_input() -> Tuple[str, Dict] :
-    return list(json.loads(input()).items())[0]
+def get_input():
+    try:
+        return list(json.loads(input()).items())[0]
+    except:
+        exit()
 
 def get_connection(database, login, password):
     connection = psycopg2.connect(dbname=database, user=login, password=password)

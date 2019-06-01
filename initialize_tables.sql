@@ -1,20 +1,16 @@
 BEGIN TRANSACTION;
 
-CREATE TYPE role_type AS ENUM('member', 'inactive');
+CREATE TYPE role_type AS ENUM('member', 'leader');
 CREATE TYPE action_type AS ENUM('protest', 'support');
 CREATE TYPE vote_type AS ENUM('upvote', 'downvote');
 
 CREATE OR REPLACE FUNCTION unique_ids(numeric) RETURNS boolean AS
 $$
-	DECLARE 
-		row_count numeric;
-	BEGIN
-	SELECT COUNT(*) FROM ((SELECT id FROM member WHERE id=$1) UNION 
-	(SELECT id FROM action WHERE id=$1) UNION
-	(SELECT id FROM project WHERE id=$1) UNION
-	(SELECT id FROM authority WHERE id=$1)) AS r INTO row_count;
 
-	RETURN row_count = 0;
+	BEGIN
+	RETURN NOT EXISTS((SELECT id FROM member WHERE id=$1) UNION 
+	(SELECT id FROM action WHERE id=$1) UNION
+	(SELECT id FROM project WHERE id=$1 OR authority_id=$1));
 	END
 $$ 
 LANGUAGE plpgsql;
@@ -30,12 +26,6 @@ END
 $$
 LANGUAGE plpgsql;
 
-CREATE TRIGGER unique_insert_on_member AFTER INSERT ON member FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
-CREATE TRIGGER unique_insert_on_action AFTER INSERT ON action FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
-CREATE TRIGGER unique_insert_on_project AFTER INSERT ON project FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
-CREATE TRIGGER unique_insert_on_authority AFTER INSERT ON authority FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
-
-
 CREATE TABLE member (
 	id numeric PRIMARY KEY, -- CHECK(unique_ids(id)),
 	password text,
@@ -45,13 +35,10 @@ CREATE TABLE member (
 	downvotes numeric DEFAULT 0
 );
 -- ON EVERY INSERT make unique_ids(id)
-CREATE TABLE authority (
-	id numeric PRIMARY KEY -- CHECK(unique_ids(id))
-);
 
 CREATE TABLE project (
 	id numeric PRIMARY KEY, -- CHECK(unique_ids(id)),
-	authority_id numeric REFERENCES authority(id)
+	authority_id numeric --REFERENCES authority(id)
 );
 
 CREATE TABLE action (
@@ -63,9 +50,16 @@ CREATE TABLE action (
     downvotes bigint DEFAULT 0	
 );
 
+CREATE OR REPLACE FUNCTION check_if_action_exists(numeric) RETURNS BOOLEAN AS
+$$
+	BEGIN
+	RETURN EXISTS(SELECT * FROM action a WHERE a.id=$1);
+	END
+$$ LANGUAGE plpgsql;
+
 CREATE TABLE member_votes_for_action (
 	member_id numeric REFERENCES member(id),
-	action_id numeric REFERENCES action(id),
+	action_id numeric REFERENCES action(id) CHECK(NOT check_if_action_exists(action_id)),
 	vote vote_type NOT NULL,
 	PRIMARY KEY (member_id, action_id)
 );
@@ -89,5 +83,10 @@ END
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER on_vote AFTER INSERT ON member_votes_for_action FOR EACH ROW EXECUTE PROCEDURE vote();
+
+CREATE TRIGGER unique_insert_on_member AFTER INSERT ON member FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
+CREATE TRIGGER unique_insert_on_action AFTER INSERT ON action FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
+CREATE TRIGGER unique_insert_on_project AFTER INSERT ON project FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
+
 
 COMMIT;

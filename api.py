@@ -1,7 +1,13 @@
+"""
+Można głosować co najwyżej jeden raz w sprawie każdej akcji.
+Jeśli akcja <action> nie została wcześniej dodana to jest zgłaszany błąd.
+
+"""
+
 from collections import namedtuple
 
-VALIDATE_QUERY = "SELECT password = crypt(%(password)s, password), role, to_timestamp(%(timestamp)s) - last_activity > INTERVAL '1 year' FROM member WHERE id=%(member)s;"
-LEADER_QUERY = "INSERT INTO member(id, password, role_group, last_activity) VALUES (%(member)s, crypt(%(password)s, gen_salt(\'bf\')), \'leader\', %(timestamp)s);"
+VALIDATE_QUERY = "SELECT password = crypt(%(password)s, password), role_group, to_timestamp(%(timestamp)s) - last_activity > INTERVAL '1 year' FROM member WHERE id=%(member)s;"
+MEMBER_INSERT_QUERY = "INSERT INTO member(id, password, role_group, last_activity) VALUES (%(member)s, crypt(%(password)s, gen_salt(\'bf\')), %(role)s, to_timestamp(%(timestamp)s));"
 SUPPORT_OR_PROTEST_QUERY = "INSERT INTO action(id,project_id, member_id, action) VALUES(%(action)s,%(project)s,%(member)s,%(action_type)s);"
 VOTE_QUERY = "INSERT INTO member_votes_for_action VALUES (%(member)s,%(action)s, %(vote)s);"
 ACTIONS_QUERY = "SELECT a.id, a.action, a.project_id, p.authority_id, a.upvotes, a.downvotes FROM action a JOIN project p ON(p.id = a.project_id) {} ORDER BY a.id;"
@@ -13,17 +19,27 @@ VOTES_QUERY = """SELECT member.id, coalesce(upvotes, 0) as upvotes, coalesce(dow
 
 TROLLS_QUERY = """SELECT id as member, upvotes, downvotes, to_timestamp(%(timestamp)s) - last_activity <= INTERVAL '1 year' as active FROM member WHERE upvotes - downvotes < 0 ORDER BY upvotes - downvotes DESC, member ASC;"""
 
-ValidationTuple = namedtuple("ValidationTuple", ["is_successful","role"]) 
-ResultTuple = namedtuple("ResultTuple", ["status", "data"])            
+ValidationTuple = namedtuple("ValidationTuple", ["is_successful","role", "inactive"]) 
 
-def validator(needed_role):
-    def wrap(f):
+def validator(needed_role, should_insert=False):
+    def wrap(func):
         def validator_decorator(self, *args, **kwargs):
             validation = self._validate_user(kwargs['member'], kwargs['password'], kwargs['timestamp'])
-            if validation.is_successful and validation.role == needed_role:
-                return self.func(*args, **kwargs)
+            print(validation)
+            if not validation and should_insert:
+                print("i szud insert")
+                self.cursor.execute(MEMBER_INSERT_QUERY, {**kwargs, 'role': 'member'})
+            validation = ValidationTuple(*validation)
+            if validation.is_successful and not validation.inactive and validation.role == needed_role:
+                print(f'i do good with {func.__name__} and {(args, kwargs)}')
+          #      try:
+                return ("OK", func(self, *args, **kwargs))
+           #     except:
+            #        print("sth is no good")
+             #       return ("ERROR", None)
             else:
-                return "ERROR", None
+                print("sth is elsed")
+                return ("ERROR", None)
         return validator_decorator
     return wrap
 
@@ -35,28 +51,32 @@ class API:
     def _validate_user(self, member: int, password: str, timestamp: int) -> ValidationTuple:
         self.cursor.execute(VALIDATE_QUERY, {'password': password, 
                                              'timestamp': timestamp, 
-                                             'member': member}) 
-        return ValidationTuple(*self.cursor.fetchone()[0])
+                                             'member': member})
+        return self.cursor.fetchone()
 
     def leader(self, timestamp: int, password: str, member: int):
-        self.cursor.execute(LEADER_QUERY, (member, password, timestamp))
-        pass
+        try:
+            self.cursor.execute(MEMBER_INSERT_QUERY, {'member': member, 'password': password, 
+                                                  'timestamp': timestamp, 'role': 'leader'})
+            return ("OK", None)
+        except:
+            return ("ERROR", None)
 
-    @validator("member")
+    @validator("member", should_insert=True)
     def support(self, timestamp: int, member: int, password: str, action: int, project: int, authority: int = None):
         self.cursor.execute(SUPPORT_OR_PROTEST_QUERY, {'member': member, 'project': project,
                                                        'action': action, 'action_type': 'support'})
 
-    @validator("member")
+    @validator("member", should_insert=True)
     def protest(self, timestamp: int, member: int, password: str, action: int, project: int, authority: int = None): 
         self.cursor.execute(SUPPORT_OR_PROTEST_QUERY, {'member': member, 'project': project,
                                                        'action': action, 'action_type': 'protest'})
 
-    @validator("member")
+    @validator("member", should_insert=True)
     def upvote(self, timestamp: int, member: int, password: str, action: int):
         self.cursor.execute(VOTE_QUERY, {'member': member,'action': action, 'vote': 'upvote'})
 
-    @validator("member")
+    @validator("member", should_insert=True)
     def downvote(self, timestamp: int, member: int, password: str, action: int):
         self.cursor.execute(VOTE_QUERY, {'member': member,'action': action, 'vote': 'downvote'})
 
@@ -83,8 +103,7 @@ class API:
         self.cursor.execute(self.__gen_votes_string(action, project), tuple(filter(lambda x: x, [action, project])))
         return self.cursor.fetchall()
 
-    @validator("leader")
     def trolls(self, timestamp: int):
-        self.cursor.execute(TROLLS_QUERY, (timestamp,) )
-        return self.cursor.fetchall()
+        self.cursor.execute(TROLLS_QUERY, {'timestamp': timestamp} )
+        return "OK", self.cursor.fetchall()
             
