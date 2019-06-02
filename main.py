@@ -35,4 +35,5 @@ if __name__ == '__main__':
             
         else:
             status, data = getattr(api, function, error_function)(**kwargs)
+            print(f'made {status} with {data}')
             print(json.dumps({field: value for field, value in zip(["status", "data"], [status, data]) if value}))
