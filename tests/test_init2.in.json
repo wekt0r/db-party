@@ -1,0 +1,7 @@
+{ "open": { "database": "student", "login": "init", "password": "qwerty"}}
+{ "leader": { "timestamp": 1262300400, "password": "abc", "member": 1}}
+{ "leader": { "timestamp": 1262300401, "password": "def", "member": 2}}
+{ "leader": { "timestamp": 1262300402, "password": "ghi", "member": 3}}
+{ "leader": { "timestamp": 1262300403, "password": "more difficult password we'd like!", "member": 4}}
+{ "leader": { "timestamp": 1262300404, "password": "whoops! repeated member!", "member": 2}}
+

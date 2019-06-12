@@ -4,7 +4,7 @@ CREATE TYPE role_type AS ENUM('member', 'leader');
 CREATE TYPE action_type AS ENUM('protest', 'support');
 CREATE TYPE vote_type AS ENUM('upvote', 'downvote');
 
-CREATE OR REPLACE FUNCTION unique_ids(integer) RETURNS boolean AS
+CREATE OR REPLACE FUNCTION is_id_unique(integer) RETURNS boolean AS
 $$
 
 	BEGIN
@@ -18,31 +18,30 @@ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION unique_id_wrapper() RETURNS TRIGGER AS
 $$
 BEGIN
-	IF unique_ids(NEW.id) THEN 
-		RETURN NEW;
+	IF NOT is_id_unique(NEW.id) THEN 
+		RAISE 'New id is not unique';
 	END IF;
-	RETURN NULL;
+	RETURN NEW;
 END	
 $$
 LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE TABLE member (
-	id integer PRIMARY KEY, -- CHECK(unique_ids(id)),
+	id integer PRIMARY KEY, 
 	password text,
-	role_group role_type DEFAULT 'member', -- changing only to member leader and always checking last activity
+	role_group role_type DEFAULT 'member',
 	last_activity timestamp without time zone,
-	upvotes integer DEFAULT 0, -- adding sum_upvotes/ sum_downvotes for fast trolls checking with trigger on updating actions
-	downvotes integer DEFAULT 0
+	upvotes bigint DEFAULT 0, -- adding sum_upvotes/ sum_downvotes for fast trolls checking with trigger on updating actions
+	downvotes bigint DEFAULT 0
 );
--- ON EVERY INSERT make unique_ids(id)
 
 CREATE TABLE project (
-	id integer PRIMARY KEY, -- CHECK(unique_ids(id)),
-	authority_id integer --REFERENCES authority(id)
+	id integer PRIMARY KEY,
+	authority_id integer
 );
 
 CREATE TABLE action (
-	id integer PRIMARY KEY, -- CHECK(unique_ids(id)),
+	id integer PRIMARY KEY,
 	project_id integer REFERENCES project(id) NOT NULL,
 	member_id integer REFERENCES member(id) NOT NULL,
 	action action_type NOT NULL,
@@ -84,9 +83,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE TRIGGER on_vote AFTER INSERT ON member_votes_for_action FOR EACH ROW EXECUTE PROCEDURE vote();
 
-CREATE TRIGGER unique_insert_on_member AFTER INSERT ON member FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
-CREATE TRIGGER unique_insert_on_action AFTER INSERT ON action FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
-CREATE TRIGGER unique_insert_on_project AFTER INSERT ON project FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
+CREATE TRIGGER unique_insert_on_member BEFORE INSERT ON member FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
+CREATE TRIGGER unique_insert_on_action BEFORE INSERT ON action FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
+CREATE TRIGGER unique_insert_on_project BEFORE INSERT ON project FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
 
 CREATE OR REPLACE FUNCTION check_project_id(projectid integer, authorityid integer) RETURNS integer AS
 $$

@@ -1,0 +1,54 @@
+{ "open": { "database": "student", "login": "app", "password": "qwerty"}}
+{ "actions":{"timestamp": 1262300411, "password": "def", "member": 2}}
+{"projects":{"timestamp": 1262300412, "password": "abc", "member": 1}}
+# at the beginning we should have empty database
+{"protest": {"timestamp": 1262300413, "password": "ghi", "member": 7, "action": 500, "project": 5000, "authority": 10000}}
+{"support": {"timestamp": 1262300414, "password": "ghi", "member": 7, "action": 601, "project": 5000}}
+{"protest": {"timestamp": 1262300415, "password": "ghi", "member": 7, "action": 501, "project": 5001, "authority": 10001}}
+{"protest": {"timestamp": 1262300416, "password": "ghi", "member": 7, "action": 502, "project": 5002, "authority": 10002}}
+{"protest": {"timestamp": 1262300417, "password": "ghi", "member": 7, "action": 503, "project": 5003, "authority": 10003}}
+{"support": {"timestamp": 1262300418, "password": "ghj", "member": 7, "action": 504, "project": 5004, "authority": 10004}}
+# above support should exist since passwords are different
+{ "actions":{"timestamp": 1262300419, "password": "def", "member": 2}}
+{ "actions":{"timestamp": 1262300420, "password": "def", "member": 2, "type": "support"}}
+{ "actions":{"timestamp": 1262300421, "password": "def", "member": 2, "type": "support", "project": 5000}}
+{ "actions":{"timestamp": 1262300422, "password": "def", "member": 2, "type": "support", "authority": 10000}}
+{"projects":{"timestamp": 1262300423, "password": "abc", "member": 1}}
+{"projects":{"timestamp": 1262300424, "password": "abc", "member": 1, "authority": 10000}}
+{ "votes": { "timestamp": 1262300425, "password": "abc", "member": 1}}
+{ "votes": { "timestamp": 1262300426, "password": "abc", "member": 1, "project": 5000}}
+{ "votes": { "timestamp": 1262300427, "password": "abc", "member": 1, "action": 500}}
+# no votes yet
+{ "upvote": { "timestamp": 1262300428, "password": "def0", "member": 10, "action":500}}
+{ "upvote": { "timestamp": 1262300429, "password": "def1", "member": 11, "action":500}}
+{ "upvote": { "timestamp": 1262300430, "password": "def2", "member": 12, "action":500}}
+{ "upvote": { "timestamp": 1262300431, "password": "def3", "member": 13, "action":500}}
+{ "downvote": { "timestamp": 1262300432, "password": "def4", "member": 14, "action":500}}
+{ "downvote": { "timestamp": 1262300433, "password": "def5", "member": 15, "action":500}}
+{ "downvote": { "timestamp": 1262300434, "password": "def6", "member": 16, "action":500}}
+{ "votes": { "timestamp": 1262300435, "password": "abc", "member": 1}}
+{ "votes": { "timestamp": 1262300436, "password": "abc", "member": 1, "project": 5000}}
+{ "votes": { "timestamp": 1262300437, "password": "abc", "member": 1, "action": 500}}
+{ "votes": { "timestamp": 1262300438, "password": "abc", "member": 1, "action": 601}}
+{ "actions":{"timestamp": 1262300439, "password": "def", "member": 2}}
+{"projects":{"timestamp": 1262300440, "password": "abc", "member": 1}}
+{ "trolls": {"timestamp": 1262300441}}
+{ "downvote": { "timestamp": 1262300442, "password": "def7", "member": 17, "action":500}}
+{ "actions":{"timestamp": 1262300443, "password": "def", "member": 2}}
+{"projects":{"timestamp": 1262300444, "password": "abc", "member": 1}}
+{ "votes": { "timestamp": 1262300445, "password": "abc", "member": 1}}
+{ "trolls": {"timestamp": 1262300446}}
+{ "downvote": { "timestamp": 1262300447, "password": "shouldn't count vote", "member": 17, "action":500}}
+# above vote shouldnt exist since password is wrong
+{ "actions":{"timestamp": 1262300448, "password": "def", "member": 2}}
+{"projects":{"timestamp": 1262300449, "password": "abc", "member": 1}}
+{ "votes": { "timestamp": 1262300450, "password": "abc", "member": 1}}
+{ "trolls": {"timestamp": 1262300451}}
+{ "downvote": { "timestamp": 1262300452, "password": "def8", "member": 18, "action":500}}
+{ "actions":{"timestamp": 1262300453, "password": "def", "member": 2}}
+{"projects":{"timestamp": 1262300454, "password": "abc", "member": 1}}
+{ "votes": { "timestamp": 1262300455, "password": "abc", "member": 1}}
+{ "trolls": {"timestamp": 1262300456}}
+# troll activity should change from true to false
+{ "trolls": {"timestamp": 1293922800}}
+
