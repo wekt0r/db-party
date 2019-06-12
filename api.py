@@ -14,7 +14,8 @@ def validator(needed_role, should_insert=False):
             if validation.is_successful and not validation.inactive and validation.role in [needed_role, 'leader']:
                 try:
                     result = ("OK", func(self, *args, **kwargs))
-                    self.cursor.execute(queries.UPDATE_TIMESTAMP_QUERY, {'member': kwargs['member'], 'timestamp': kwargs['timestamp']})
+                    self.cursor.execute(queries.UPDATE_TIMESTAMP_QUERY, {'member': kwargs['member'], 
+                                                                         'timestamp': kwargs['timestamp']})
                     return result
                 except:
                     return ("ERROR", None)
@@ -30,8 +31,8 @@ class API:
         
     def _validate_user(self, member: int, password: str, timestamp: int) -> ValidationTuple:
         self.cursor.execute(queries.VALIDATE_QUERY, {'password': password, 
-                                             'timestamp': timestamp, 
-                                             'member': member})
+                                                     'timestamp': timestamp, 
+                                                     'member': member})
         try:
             return ValidationTuple(*self.cursor.fetchone())
         except:
@@ -40,7 +41,7 @@ class API:
     def leader(self, timestamp: int, password: str, member: int):
         try:
             self.cursor.execute(queries.MEMBER_INSERT_QUERY, {'member': member, 'password': password, 
-                                                  'timestamp': timestamp, 'role': 'leader'})
+                                                              'timestamp': timestamp, 'role': 'leader'})
             return ("OK", None)
         except:
             return ("ERROR", None)
@@ -48,14 +49,14 @@ class API:
     @validator("member", should_insert=True)
     def support(self, timestamp: int, member: int, password: str, action: int, project: int, authority: int = None):
         self.cursor.execute(queries.SUPPORT_OR_PROTEST_QUERY, {'member': member, 'project': project,
-                                                       'action': action, 'action_type': 'support',
-                                                        'authority': authority})
+                                                               'action': action, 'action_type': 'support',
+                                                               'authority': authority})
 
     @validator("member", should_insert=True)
     def protest(self, timestamp: int, member: int, password: str, action: int, project: int, authority: int = None): 
         self.cursor.execute(queries.SUPPORT_OR_PROTEST_QUERY, {'member': member, 'project': project,
-                                                       'action': action, 'action_type': 'protest',
-                                                       'authority': authority})
+                                                               'action': action, 'action_type': 'protest',
+                                                               'authority': authority})
 
     @validator("member", should_insert=True)
     def upvote(self, timestamp: int, member: int, password: str, action: int):
