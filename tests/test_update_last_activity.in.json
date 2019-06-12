@@ -4,5 +4,6 @@
 { "downvote": { "timestamp": 1538344800, "password": "abc", "member": 1, "action":501}}
 { "downvote": { "timestamp": 1538344800, "password": "abc", "member": 1, "action":502}}
 { "downvote": { "timestamp": 1538344801, "password": "123", "member": 4, "action":600}}
+-- below downvote should result in error because of more than 1 year of inactivity
 { "downvote": { "timestamp": 1549062000, "password": "123", "member": 5, "action":600}}
 { "trolls": { "timestamp": 1549062001}}

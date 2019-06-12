@@ -1,0 +1,5 @@
+{ "open": { "database": "student", "login": "app", "password": "qwerty"}}
+{ "protest": { "timestamp": 1549062010, "password": "some pass", "member": 42, "action":500, "project":500, "authority":500}}
+{ "protest": { "timestamp": 1549062010, "password": "some pass", "member": 42, "action":600, "project":5000}}
+{ "actions": { "timestamp": 1557475708, "password": "asd", "member": 2}}
+{ "votes": { "timestamp": 1557475705, "password": "abc", "member": 1}}

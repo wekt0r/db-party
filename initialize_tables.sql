@@ -26,6 +26,17 @@ END
 $$
 LANGUAGE plpgsql SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION unique_authority_id() RETURNS TRIGGER AS
+$$
+BEGIN
+	IF NOT is_id_unique(NEW.authority_id) OR NEW.authority_id = NEW.id THEN 
+		RAISE 'New id is not unique';
+	END IF;
+	RETURN NEW;
+END	
+$$
+LANGUAGE plpgsql SECURITY DEFINER;
+
 CREATE TABLE member (
 	id integer PRIMARY KEY, 
 	password text,
@@ -86,6 +97,7 @@ CREATE TRIGGER on_vote AFTER INSERT ON member_votes_for_action FOR EACH ROW EXEC
 CREATE TRIGGER unique_insert_on_member BEFORE INSERT ON member FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
 CREATE TRIGGER unique_insert_on_action BEFORE INSERT ON action FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
 CREATE TRIGGER unique_insert_on_project BEFORE INSERT ON project FOR EACH ROW EXECUTE PROCEDURE unique_id_wrapper();
+CREATE TRIGGER unique_insert_on_project_authority_id BEFORE INSERT ON project FOR EACH ROW EXECUTE PROCEDURE unique_authority_id();
 
 CREATE OR REPLACE FUNCTION check_project_id(projectid integer, authorityid integer) RETURNS integer AS
 $$

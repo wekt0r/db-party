@@ -16,18 +16,22 @@ def validator(needed_role, should_insert=False):
                     result = ("OK", func(self, *args, **kwargs))
                     self.cursor.execute(queries.UPDATE_TIMESTAMP_QUERY, {'member': kwargs['member'], 
                                                                          'timestamp': kwargs['timestamp']})
+                    self.connection.commit()                                                     
                     return result
                 except:
+                    self.connection.rollback()
                     return ("ERROR", None)
             else:
+                self.connection.rollback()
                 return ("ERROR", None)
         return validator_decorator
     return wrap
 
 
 class API:
-    def __init__(self, cursor_to_db):
-        self.cursor = cursor_to_db
+    def __init__(self, connection):
+        self.connection = connection
+        self.cursor = connection.cursor()
         
     def _validate_user(self, member: int, password: str, timestamp: int) -> ValidationTuple:
         self.cursor.execute(queries.VALIDATE_QUERY, {'password': password, 
@@ -42,6 +46,7 @@ class API:
         try:
             self.cursor.execute(queries.MEMBER_INSERT_QUERY, {'member': member, 'password': password, 
                                                               'timestamp': timestamp, 'role': 'leader'})
+            self.connection.commit()
             return ("OK", None)
         except:
             return ("ERROR", None)

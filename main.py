@@ -1,6 +1,5 @@
 import json
 import sys
-from typing import Tuple, Dict
 import psycopg2
 
 from api import API
@@ -18,7 +17,6 @@ def get_input(line):
 
 def get_connection(database, login, password):
     connection = psycopg2.connect(dbname=database, user=login, password=password)
-    connection.set_session(autocommit=True)
     return connection
 
 if __name__ == '__main__':
@@ -34,7 +32,7 @@ if __name__ == '__main__':
                 connection = get_connection(**kwargs)
                 if '--init' in sys.argv:
                     init_database(connection.cursor())
-                api = API(connection.cursor())
+                api = API(connection)
                 print(json.dumps({"status": "OK"}))
             except:
                 print(json.dumps({"status": "ERROR"}))
